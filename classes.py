@@ -1,3 +1,7 @@
+from dataclasses import dataclass
+
+from skills import Skill
+
 
 @dataclass
 class UnitClass:
