@@ -68,6 +68,7 @@ class Arena(metaclass=BaseSingleton):
             result = self._check_players_hp()
             if result is not None:
                 return result
+
             self._stamina_regeneration()
             return enemy_result
 

@@ -10,6 +10,7 @@ class BaseUnit(ABC):
     """
     Базовый класс юнита
     """
+
     def __init__(self, name: str, unit_class: UnitClass):
         """
         При инициализации класса Unit используем свойства класса UnitClass
@@ -66,6 +67,8 @@ class BaseUnit(ABC):
         #      присваиваем новое значение для аттрибута self.hp
         if damage > 0:
             self.hp -= damage
+        if self.hp < 0:
+            self.hp = 0
 
     @abstractmethod
     def hit(self, target: BaseUnit) -> str:
@@ -85,9 +88,12 @@ class BaseUnit(ABC):
         """
         if self._is_skill_used:
             return 'Навык уже был использован'
-
-        result = self.unit_class.skill.use(self, target)
-        self._is_skill_used = True
+        if self.stamina < 0:
+            self.stamina = 0
+            return 'Не хватает выносливости'
+        else:
+            result = self.unit_class.skill.use(self, target)
+            self._is_skill_used = True
 
         return result
 
@@ -102,19 +108,19 @@ class PlayerUnit(BaseUnit):
         а также возвращается результат в виде строки
         """
         if self.stamina < self.weapon.stamina_per_hit:
-            f"{self.name} попытался использовать {self.weapon.name}, но у него не хватило выносливости."
+            return f"{self.name} попытался использовать {self.weapon.name}, но у него не хватило выносливости."
+        else:
+            damage = self._count_damage(target)
 
-        damage = self._count_damage(target)
-
-        if damage > 0:
+            if damage > 0:
+                return (
+                    f"{self.name} используя {self.weapon.name} пробивает {target.armor.name} "
+                    f"соперника и наносит {damage} урона."
+                )
             return (
-                f"{self.name} используя {self.weapon.name} пробивает {target.armor.name} "
-                f"соперника и наносит {damage} урона."
-            )
-        return (
-            f"{self.name} используя {self.weapon.name} наносит удар, "
+                f"{self.name} используя {self.weapon.name} наносит удар, "
                 f"но {target.armor.name} cоперника его останавливает."
-        )
+            )
 
 
 class EnemyUnit(BaseUnit):
@@ -133,16 +139,14 @@ class EnemyUnit(BaseUnit):
 
         if self.stamina < self.weapon.stamina_per_hit:
             return f"{self.name} попытался использовать {self.weapon.name}, но у него не хватило выносливости."
+        else:
+            damage = self._count_damage(target)
 
-        damage = self._count_damage(target)
-
-        if damage > 0:
-            return (
-                f"{self.name} используя {self.weapon.name} пробивает {target.armor.name} "
+            if damage > 0:
+                return (
+                    f"{self.name} используя {self.weapon.name} пробивает {target.armor.name} "
                     f"и наносит Вам {damage} урона."
+                )
+            return (
+                f"{self.name} используя {self.weapon.name} наносит удар, но Ваш(а) {target.armor.name} его останавливает."
             )
-        return (
-            f"{self.name} используя {self.weapon.name} наносит удар, но Ваш(а) {target.armor.name} его останавливает."
-        )
-
-

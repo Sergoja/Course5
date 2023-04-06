@@ -35,7 +35,7 @@ def hit():
     # TODO если игра идет - вызываем метод player.hit() экземпляра класса арены
     # TODO если игра не идет - пропускаем срабатывание метода (простот рендерим шаблон с текущими данными)
     if arena.game_is_running:
-        result = arena.player.hit()
+        result = arena.player_hit()
     else:
         result = arena.battle_result
 
@@ -106,7 +106,36 @@ def choose_enemy():
     # TODO кнопка выбор соперников. 2 метода GET и POST
     # TODO также на GET отрисовываем форму.
     # TODO а на POST отправляем форму и делаем редирект на начало битвы
-    pass
+    if request.method == 'GET':
+        header = 'Выберите противника'
+        equipment = Equipment()
+        weapons = equipment.get_weapons_names()
+        armors = equipment.get_armors_names()
+        result = {
+            'header': header,
+            'weapons': weapons,
+            'armors': armors,
+            'classes': unit_classes,
+        }
+        return render_template('hero_choosing.html', result=result)
+
+    if request.method == 'POST':
+        name = request.form['name']
+        weapon_name = request.form['weapon']
+        armor_name = request.form['armor']
+        unit_class_name = request.form['unit_class']
+
+        enemy = EnemyUnit(name=name, unit_class=unit_classes.get(unit_class_name))
+        if enemy is None:
+            return redirect(url_for('choose_enemy'))
+
+        enemy.equip_armor(Equipment().get_armor(armor_name))
+        enemy.equip_weapon(Equipment().get_weapon(weapon_name))
+        # if enemy.armor is None or enemy.weapon is None:
+        #     return redirect(url_for('choose_enemy'))
+
+        heroes['enemy'] = enemy
+        return redirect(url_for('start_fight'))
 
 
 if __name__ == "__main__":
